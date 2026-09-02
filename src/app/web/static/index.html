@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>AI Resume Screening System</title>
+
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+
+  <main class="page-wrap">
+
+    <!-- HEADER -->
+    <section class="hero">
+      <p class="eyebrow">SMART RECRUITMENT SYSTEM</p>
+
+      <h1>AI Resume Screening System</h1>
+
+      <p class="hero-copy">
+        Analyze resumes against any job role using intelligent
+        skill matching, experience analysis and candidate ranking.
+      </p>
+    </section>
+
+
+    <!-- MAIN DASHBOARD -->
+    <section class="dashboard-grid">
+
+      <!-- JOB REQUIREMENTS -->
+      <article class="panel">
+
+        <h2>Job Requirements</h2>
+
+        <form id="analysis-form">
+
+          <label for="job-title">
+            Job Title
+          </label>
+
+          <input
+            id="job-title"
+            name="job-title"
+            type="text"
+            placeholder="e.g. School Teacher"
+            required
+          />
+
+
+          <label for="role-family">
+            Job Role / Department
+          </label>
+
+          <input
+            id="role-family"
+            name="role-family"
+            type="text"
+            placeholder="e.g. Teaching Department"
+            required
+          />
+
+
+          <label for="job-description">
+            Job Description
+          </label>
+
+          <textarea
+            id="job-description"
+            name="job-description"
+            rows="6"
+            placeholder="Enter job description..."
+            required
+          ></textarea>
+
+
+          <label for="must-have">
+            Must-Have Skills
+          </label>
+
+          <input
+            id="must-have"
+            name="must-have"
+            type="text"
+            placeholder="Communication, Teaching, Lesson Planning"
+          />
+
+
+          <label for="nice-to-have">
+            Nice-To-Have Skills
+          </label>
+
+          <input
+            id="nice-to-have"
+            name="nice-to-have"
+            type="text"
+            placeholder="Leadership, Creativity, Presentation"
+          />
+
+
+          <!-- ONLY UPLOAD OPTION -->
+          <h3>Upload Resume</h3>
+
+          <section id="file-mode-section">
+
+            <label for="resume-files">
+              Resume Files (PDF, DOCX, TXT)
+            </label>
+
+            <input
+              id="resume-files"
+              type="file"
+              accept=".pdf,.docx,.txt"
+              multiple
+            />
+
+            <div
+              id="drop-zone"
+              class="drop-zone"
+              tabindex="0"
+              role="button"
+            >
+              <p class="drop-title">
+                Drop resumes here or click to browse
+              </p>
+
+              <p class="drop-subtitle">
+                Supports PDF, DOCX and TXT
+              </p>
+            </div>
+
+
+            <div
+              id="upload-preview"
+              class="upload-preview empty-state"
+            >
+              <p>No files selected.</p>
+            </div>
+
+
+            <div
+              id="preview-status"
+              class="preview-status hidden"
+            ></div>
+
+
+            <div
+              id="profile-preview-cards"
+              class="profile-preview-cards empty-state"
+            >
+              <p>
+                Parsed candidate profiles will appear here.
+              </p>
+            </div>
+
+          </section>
+
+
+          <div class="actions">
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+            >
+              Run AI Screening
+            </button>
+
+          </div>
+
+        </form>
+
+      </article>
+
+
+      <!-- LEADERBOARD -->
+      <article class="panel">
+
+        <div class="results-header">
+
+          <h2>Leaderboard</h2>
+
+          <p id="result-subtitle">
+            Run an analysis to view ranked candidates.
+          </p>
+
+        </div>
+
+
+        <div
+          id="status-banner"
+          class="status-banner hidden"
+        ></div>
+
+
+        <div
+          id="leaderboard"
+          class="leaderboard empty-state"
+        >
+          <p>
+            No results yet. Upload resumes to generate a shortlist.
+          </p>
+        </div>
+
+      </article>
+
+    </section>
+
+
+    <!-- COMPARISON -->
+    <section class="panel comparison-panel">
+
+      <h2>Candidate Comparison</h2>
+
+      <div class="comparison-controls">
+
+        <div>
+
+          <label for="compare-a">
+            Candidate A
+          </label>
+
+          <select id="compare-a"></select>
+
+        </div>
+
+
+        <div>
+
+          <label for="compare-b">
+            Candidate B
+          </label>
+
+          <select id="compare-b"></select>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="comparison-content"
+        class="comparison-content empty-state"
+      >
+        <p>
+          Run analysis and select two candidates to compare.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script src="/static/app.js"></script>
+
+</body>
+</html>
