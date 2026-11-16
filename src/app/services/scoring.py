@@ -1,33 +1,10 @@
+
 from app.schemas import CandidateInput, CandidateScore
 
-
-def normalize(text: str) -> str:
-    return text.lower().strip()
-
-
-def get_skills(text: str) -> set[str]:
-    skills = {
-        "communication",
-        "classroom management",
-        "lesson planning",
-        "teaching",
-        "subject knowledge",
-        "educational technology",
-        "microsoft office",
-        "leadership",
-        "presentation",
-        "creativity",
-        "python",
-        "java",
-        "javascript",
-        "sql",
-        "machine learning",
-        "data analysis",
-        "excel",
-    }
-
-    text = normalize(text)
-    return {skill for skill in skills if skill in text}
+from app.services.skill_taxonomy import (
+    extract_skills,
+    normalize_skill_list,
+)
 
 
 def score_candidate(
@@ -37,16 +14,21 @@ def score_candidate(
     role_family: str,
 ) -> CandidateScore:
 
-    resume_skills = get_skills(candidate.resume_text)
+    # Extract skills from resume
+    resume_skills = extract_skills(candidate.resume_text)
 
-    must = {normalize(skill) for skill in must_have}
-    nice = {normalize(skill) for skill in nice_to_have}
+    # Normalize job requirements
+    must = set(normalize_skill_list(must_have))
+    nice = set(normalize_skill_list(nice_to_have))
 
-    matched_must = sorted(resume_skills.intersection(must))
-    matched_nice = sorted(resume_skills.intersection(nice))
+    # Find matching skills
+    matched_must = sorted(resume_skills & must)
+    matched_nice = sorted(resume_skills & nice)
 
+    # Find missing must-have skills
     missing = sorted(must - resume_skills)
 
+    # Calculate match percentage
     must_rate = (
         len(matched_must) / len(must) * 100
         if must else 100
@@ -57,25 +39,37 @@ def score_candidate(
         if nice else 0
     )
 
-    skill_score = (must_rate * 0.7) + (nice_rate * 0.3)
-
-    experience_score = min(candidate.years_experience * 20, 100)
-
-    total_score = (
-        skill_score * 0.7
-        + experience_score * 0.3
+    skill_score = (
+        must_rate * 0.7 + nice_rate * 0.3
     )
 
-    matched = sorted(resume_skills.intersection(must.union(nice)))
+    # Experience score
+    experience_score = min(
+        candidate.years_experience * 20, 100
+    )
+
+    # Overall score
+    total_score = (
+        skill_score * 0.7 +
+        experience_score * 0.3
+    )
+
+    matched = sorted(
+        resume_skills & (must | nice)
+    )
 
     strengths = []
     concerns = []
 
     if matched_must:
-        strengths.append(f"Matched {len(matched_must)} must-have skills")
+        strengths.append(
+            f"Matched {len(matched_must)} must-have skills"
+        )
 
     if matched_nice:
-        strengths.append(f"Matched {len(matched_nice)} nice-to-have skills")
+        strengths.append(
+            f"Matched {len(matched_nice)} nice-to-have skills"
+        )
 
     if missing:
         concerns.append(
@@ -119,6 +113,8 @@ def rank_candidates(
 
     return sorted(
         scored,
-        key=lambda candidate: candidate.total_score,
-        reverse=True,
+        key=lambda candidate: (
+            -candidate.total_score,
+            candidate.name.lower(),
+        ),
     )

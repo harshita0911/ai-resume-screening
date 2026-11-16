@@ -1,3 +1,4 @@
+
 import os
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -9,12 +10,15 @@ from app.schemas import (
     PreviewFilesResponse,
     UploadProfilePreview,
 )
+
 from app.services.resume_parser import (
     ResumeParsingError,
     extract_candidate_profile,
     parse_resume_bytes,
 )
+
 from app.services.scoring import rank_candidates
+from app.services.skill_taxonomy import extract_skills
 
 
 router = APIRouter(prefix="/v1", tags=["screening"])
@@ -36,11 +40,10 @@ def _parse_csv_field(raw_value: str) -> list[str]:
     ]
 
 
-def _get_role_family(job_title: str, role_family: str | None) -> str:
-    """
-    Use the role/department entered by the user.
-    If it is empty, use the job title instead.
-    """
+def _get_role_family(
+    job_title: str,
+    role_family: str | None
+) -> str:
 
     if role_family and role_family.strip():
         return role_family.strip()
@@ -64,10 +67,14 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
         ", ".join(request.nice_to_have_skills)
     )
 
+    required = sorted(
+        extract_skills(request.job_description)
+    )
+
     ranked = rank_candidates(
         request.candidates,
         role,
-        [],
+        required,
         must_have,
         nice_to_have,
     )
@@ -79,7 +86,7 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     return AnalyzeResponse(
         job_title=request.job_title,
         role_family=role,
-        required_skills=[],
+        required_skills=required,
         must_have_skills=must_have,
         nice_to_have_skills=nice_to_have,
         ranked_candidates=ranked[:top_limit],
@@ -111,11 +118,20 @@ async def preview_files(
                 content,
             )
 
+            if not resume_text.strip():
+                raise ResumeParsingError(
+                    "No readable resume text found."
+                )
+
             candidate_name, years = (
                 extract_candidate_profile(
                     resume_text,
                     file_name,
                 )
+            )
+
+            detected = sorted(
+                extract_skills(resume_text)
             )
 
             previews.append(
@@ -124,8 +140,12 @@ async def preview_files(
                     status="ok",
                     candidate_name=candidate_name,
                     years_experience=years,
-                    detected_skills=[],
-                    message="Profile parsed successfully.",
+                    detected_skills=detected,
+                    message=(
+                        "Profile parsed successfully."
+                        if detected
+                        else "Resume parsed, but no known skills were detected."
+                    ),
                 )
             )
 
@@ -174,6 +194,11 @@ async def analyze_files(
                 content,
             )
 
+            if len(resume_text.strip()) < 30:
+                raise ResumeParsingError(
+                    "Resume contains too little readable text."
+                )
+
         except ResumeParsingError as exc:
             raise HTTPException(
                 status_code=400,
@@ -208,10 +233,14 @@ async def analyze_files(
         nice_to_have_skills
     )
 
+    required = sorted(
+        extract_skills(job_description)
+    )
+
     ranked = rank_candidates(
         candidates,
         role,
-        [],
+        required,
         must_have,
         nice_to_have,
     )
@@ -223,7 +252,7 @@ async def analyze_files(
     return AnalyzeResponse(
         job_title=job_title,
         role_family=role,
-        required_skills=[],
+        required_skills=required,
         must_have_skills=must_have,
         nice_to_have_skills=nice_to_have,
         ranked_candidates=ranked[:top_limit],
